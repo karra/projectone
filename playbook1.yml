@@ -1,0 +1,63 @@
+- name: Create VM in Azure
+  hosts: localhost
+  connection: local
+  tasks:
+          - name: Create a resource group
+            azure_rm_resourcegroup:
+                    name: newRG
+                    location: westus2
+          - name: Create a virtual network
+            azure_rm_virtualnetwork:
+                    name: newVNet
+                    resource_group: newRG
+                    address_prefixes: "10.2.0.0/16"
+          - name: Create a subnet
+            azure_rm_subnet:
+                    name: newSubnet
+                    resource_group: newRG
+                    address_prefix: "10.2.0.0/24"
+                    virtual_network: newVNet
+          - name: Create a public IP address
+            azure_rm_publicipaddress:
+                    resource_group: newRG
+                    allocation_method: Static
+                    name: newPip
+            register: pip
+          - name: VM's public IP
+            debug:
+                    msg: "VM's IP: {{ pip.state.ip_address }}"
+          - name: Create a network security group
+            azure_rm_securitygroup:
+                    name: newNsg
+                    resource_group: newRG
+                    rules:
+                            - name: AllowSshInBound
+                              protocol: Tcp
+                              destination_port_range: 22
+                              access: Allow
+                              priority: 100
+                              direction: Inbound
+          - name: Create a NIC
+            azure_rm_networkinterface:
+                    name: newNic
+                    resource_group: newRG
+                    virtual_network: newVNet
+                    subnet: newSubnet
+                    public_ip_name: newPip
+                    security_group: newNsg
+          - name: Create a VM
+            azure_rm_virtualmachine:
+                    name: newVM
+                    resource_group: newRG
+                    vm_size: Standard_D2s_v3
+                    admin_username: skarra
+                    ssh_password_enabled: false
+                    ssh_public_keys:
+                            - path: /home/skarra/.ssh/authorized_keys
+                              key_data: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCuOo9WpiJPZhYBti2dGZu3lOEW4F8LWsCyVbRNM9h7phZDcKm+bsl9LjD/bZbxhyxRUUBmLjVjDiH9arpyuOgP4WuPuiYONCQSsb8uYLh3fdGoJY1LREPEyDcxZXZzdKFmkgTRqu7S/NqQlqj4ox+zY0R4zKo3+QUNDuiBG8LUElOjt4K8COKdq/v3Rsq4RUGI929lYOUykWw9rmDRYlCjt3jhTOOtFfo/Xc8+HevwqjN49/HzXvWD4rTaori3SdC3Juj9GvmsM/Ycg8B+l46vcjaMLFmKgG/JBhbC/a0hY8EEMpk7TV4gsSQ/GqjKedALUeNTDwq3Lc36ZpxIM8v9 skarra@jenkins-slave-vm"
+                    network_interfaces: newNic
+                    image:
+                            offer: UbuntuServer
+                            publisher: Canonical
+                            sku: "18.04-LTS"
+                            version: latest

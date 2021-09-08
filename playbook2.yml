@@ -1,0 +1,36 @@
+- name: Install Docker in Azure VM
+  hosts: azurevm
+  tasks:
+          - name: remove older versions of Docker
+            apt:
+                    name: "docker docker-engine docker.io containerd runc"
+                    state: absent
+                    force_apt_get: "yes"
+
+          - name: update apt packages
+            apt:
+                    update_cache: "yes"
+                    force_apt_get: "yes"
+
+          - name: install prerequisite packages
+            apt:
+                    name: "apt-transport-https ca-certificates curl gnupg lsb-release"
+                    state: present
+                    force_apt_get: "yes"
+
+          - name: add Docker's official GPG key
+            shell: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg"
+
+          - name: setup stable repo
+            shell: echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+          - name: update apt packages
+            apt:
+                    update_cache: "yes"
+                    force_apt_get: "yes"
+
+          - name: install docker packages
+            apt:
+                    name: "docker-ce docker-ce-cli containerd.io"
+                    state: present
+                    force_apt_get: "yes"

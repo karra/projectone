@@ -13,37 +13,26 @@
                   - docker-ce-cli
                   - containerd.io
   tasks:
-          - name: remove older versions of Docker
-            apt:
-                    name: "docker docker-engine docker.io containerd runc"
-                    state: absent
-                    force_apt_get: "yes"
-
-          - name: update apt packages
-            apt:
-                    update_cache: "yes"
-                    force_apt_get: "yes"
-
           - name: install prerequisite packages
             apt:
                     name: "{{ PREREQ_PACKAGES }}"
                     state: present
                     force_apt_get: "yes"
+                    update_cache: "yes"
 
           - name: add Docker's official GPG key
             apt_key:
                     url: https://download.docker.com/linux/ubuntu/gpg
+                    state: present
 
-          - name: setup stable repo
-            shell: echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-          - name: update apt packages
-            apt:
-                    update_cache: "yes"
-                    force_apt_get: "yes"
+          - name: Add Docker Repository
+            apt_repository:
+                    repo: deb https://download.docker.com/linux/ubuntu bionic stable
+                    state: present
 
           - name: install docker packages
             apt:
                     name: "{{ DOCKER_PACKAGES }}"
                     state: present
                     force_apt_get: "yes"
+                    update_cache: "yes"

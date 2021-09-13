@@ -1,0 +1,38 @@
+- name: Install Docker in Azure VM
+  hosts: azurevm
+  become: true
+  vars:
+          PREREQ_PACKAGES:
+                  - apt-transport-https
+                  - ca-certificates
+                  - curl
+                  - gnupg
+                  - lsb-release
+          DOCKER_PACKAGES:
+                  - docker-ce
+                  - docker-ce-cli
+                  - containerd.io
+  tasks:
+          - name: install prerequisite packages
+            apt:
+                    name: "{{ PREREQ_PACKAGES }}"
+                    state: present
+                    force_apt_get: "yes"
+                    update_cache: "yes"
+
+          - name: add Docker's official GPG key
+            apt_key:
+                    url: https://download.docker.com/linux/ubuntu/gpg
+                    state: present
+
+          - name: Add Docker Repository
+            apt_repository:
+                    repo: deb https://download.docker.com/linux/ubuntu bionic stable
+                    state: present
+
+          - name: install docker packages
+            apt:
+                    name: "{{ DOCKER_PACKAGES }}"
+                    state: present
+                    force_apt_get: "yes"
+                    update_cache: "yes"
